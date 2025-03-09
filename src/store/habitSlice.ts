@@ -10,31 +10,36 @@ export interface Habit {
 
 interface HabitState {
   habits: Habit[];
+  isLoading: boolean;
+  error: string | null;
+  lastSynced: string | null;
 }
 
 const initialState: HabitState = {
-  habits: [
-    {
-      id: '1',
-      name: 'Morning Exercise',
-      completed: false,
-      frequency: 'daily',
-      streak: 3,
-    },
-    {
-      id: '2',
-      name: 'Read 30 minutes',
-      completed: false,
-      frequency: 'daily',
-      streak: 5,
-    },
-  ],
+  habits: [],
+  isLoading: false,
+  error: null,
+  lastSynced: null,
 };
 
 const habitSlice = createSlice({
   name: 'habits',
   initialState,
   reducers: {
+    startLoading: state => {
+      state.isLoading = true;
+      state.error = null;
+    },
+    loadingFailed: (state, action: PayloadAction<string>) => {
+      state.isLoading = false;
+      state.error = action.payload;
+    },
+    habitsLoaded: (state, action: PayloadAction<Habit[]>) => {
+      state.habits = action.payload;
+      state.isLoading = false;
+      state.error = null;
+      state.lastSynced = new Date().toISOString();
+    },
     addHabit: (
       state,
       action: PayloadAction<Omit<Habit, 'id' | 'completed' | 'streak'>>,
@@ -46,25 +51,36 @@ const habitSlice = createSlice({
         streak: 0,
       };
       state.habits.push(newHabit);
+      state.lastSynced = new Date().toISOString();
     },
     toggleHabit: (state, action: PayloadAction<string>) => {
       const habit = state.habits.find(h => h.id === action.payload);
       if (habit) {
         habit.completed = !habit.completed;
+        state.lastSynced = new Date().toISOString();
       }
     },
     updateStreak: (state, action: PayloadAction<string>) => {
       const habit = state.habits.find(h => h.id === action.payload);
       if (habit) {
         habit.streak += 1;
+        state.lastSynced = new Date().toISOString();
       }
     },
     deleteHabit: (state, action: PayloadAction<string>) => {
       state.habits = state.habits.filter(habit => habit.id !== action.payload);
+      state.lastSynced = new Date().toISOString();
     },
   },
 });
 
-export const {addHabit, toggleHabit, updateStreak, deleteHabit} =
-  habitSlice.actions;
+export const {
+  startLoading,
+  loadingFailed,
+  habitsLoaded,
+  addHabit,
+  toggleHabit,
+  updateStreak,
+  deleteHabit,
+} = habitSlice.actions;
 export default habitSlice.reducer;

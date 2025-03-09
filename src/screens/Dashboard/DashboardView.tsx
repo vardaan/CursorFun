@@ -1,13 +1,25 @@
 import React from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
-import { Surface, Text, TouchableRipple, FAB, Checkbox, useTheme, Card } from 'react-native-paper';
+import {
+    Surface,
+    Text,
+    TouchableRipple,
+    FAB,
+    Checkbox,
+    useTheme,
+    Card,
+    ActivityIndicator,
+    Banner,
+} from 'react-native-paper';
 import type { Habit } from '../../store/habitSlice';
 
-interface DashboardViewProps {
+interface DashboardScreenViewProps {
     habits: Habit[];
     completedHabits: number;
     onToggleHabit: (id: string) => void;
     onAddHabit: () => void;
+    isLoading: boolean;
+    error: string | null;
 }
 
 const DashboardView = ({
@@ -15,7 +27,9 @@ const DashboardView = ({
     completedHabits,
     onToggleHabit,
     onAddHabit,
-}: DashboardViewProps) => {
+    isLoading,
+    error,
+}: DashboardScreenViewProps) => {
     const theme = useTheme();
 
     const renderHabit = ({ item }: { item: Habit }) => (
@@ -27,7 +41,7 @@ const DashboardView = ({
                             {item.name}
                         </Text>
                         <Text variant="bodyMedium" style={styles.habitStreak}>
-                            🔥 {item.streak} days
+                            <Text>🔥</Text> {item.streak} days
                         </Text>
                     </View>
                     <Checkbox
@@ -40,8 +54,27 @@ const DashboardView = ({
         </Card>
     );
 
+    if (isLoading) {
+        return (
+            <Surface style={[styles.container, styles.centerContent]}>
+                <ActivityIndicator size="large" />
+                <Text variant="titleMedium" style={styles.loadingText}>
+                    Loading habits...
+                </Text>
+            </Surface>
+        );
+    }
+
     return (
         <Surface style={styles.container}>
+            {error && (
+                <Banner
+                    visible={true}
+                    icon="alert-circle"
+                    actions={[{ label: 'Dismiss', onPress: () => { } }]}>
+                    {error}
+                </Banner>
+            )}
             <Surface style={styles.header} elevation={1}>
                 <Text variant="headlineMedium" style={styles.title}>
                     Today's Habits
@@ -55,7 +88,18 @@ const DashboardView = ({
                 renderItem={renderHabit}
                 keyExtractor={item => item.id}
                 style={styles.list}
-                contentContainerStyle={styles.listContent}
+                contentContainerStyle={[
+                    styles.listContent,
+                    habits.length === 0 && styles.emptyList,
+                ]}
+                ListEmptyComponent={
+                    <View style={styles.emptyContainer}>
+                        <Text variant="titleMedium">No habits yet</Text>
+                        <Text variant="bodyMedium">
+                            Tap the + button to create your first habit
+                        </Text>
+                    </View>
+                }
             />
             <FAB
                 icon="plus"
@@ -70,6 +114,13 @@ const DashboardView = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    centerContent: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 16,
     },
     header: {
         padding: 20,
@@ -86,6 +137,14 @@ const styles = StyleSheet.create({
     },
     listContent: {
         padding: 16,
+    },
+    emptyList: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    emptyContainer: {
+        alignItems: 'center',
     },
     habitItem: {
         marginBottom: 12,

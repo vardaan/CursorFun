@@ -11,7 +11,7 @@ type DashboardContainerProps = {
 
 const DashboardContainer = ({ navigation }: DashboardContainerProps) => {
     const dispatch = useAppDispatch();
-    const habits = useAppSelector(state => state.habits.habits);
+    const { habits, isLoading, error } = useAppSelector(state => state.habits);
     const completedHabits = habits.filter(habit => habit.completed).length;
 
     const handleToggleHabit = (id: string) => {
@@ -28,6 +28,8 @@ const DashboardContainer = ({ navigation }: DashboardContainerProps) => {
             completedHabits={completedHabits}
             onToggleHabit={handleToggleHabit}
             onAddHabit={handleAddHabit}
+            isLoading={isLoading}
+            error={error}
         />
     );
 };
